@@ -79,3 +79,7 @@ if __name__ == "__main__":
 
     result = converter.convert_and_sum(custom_floats)
     print(f"Sum: {result}")
+
+    print("Makhandia")
+    print("racey")
+    # tesing out 
