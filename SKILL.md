@@ -5,84 +5,79 @@ description: Push code to a GitHub repository. Use when the user wants to commit
 
 # GitHub Push Skill
 
-Pushes the user's code to a GitHub repository by staging all changes, committing with a user-provided message, and pushing to the main branch.
+Pushes the user's code to GitHub by running the full sequence: stage all files → commit → push. Never skip or reorder these steps.
 
 ## Workflow
 
-Follow these steps in order:
-
 ### Step 1: Verify Git Repository
 
-Check that the current directory is a git repository and has a remote configured:
+Run:
 
 ```bash
-git status
 git remote -v
 ```
 
-- If not a git repo, tell the user and stop.
 - If no remote is configured, ask the user for the GitHub repo URL and run:
   ```bash
   git remote add origin <url>
   ```
+- If not a git repo at all, tell the user and stop.
 
 ### Step 2: Stage All Files
 
-**Always run this command first, before checking status:**
+**Always run this. Never skip it.**
 
 ```bash
 git add .
 ```
 
-Then show the user what was staged:
+Then check what was staged:
 
 ```bash
 git diff --cached --stat
 ```
 
-If the output is empty, tell the user there are no changes to commit and stop. Otherwise continue to Step 3.
+- If the output is empty, tell the user: "There are no changes to commit." and stop.
+- If there are staged changes, show them to the user and continue.
 
 ### Step 3: Ask for Commit Message
 
-Ask the user:
+Ask the user exactly this:
 
 > "What would you like your commit message to be?"
 
-Wait for their response before proceeding. Do not auto-generate a commit message — always ask.
+**Do not proceed until the user replies. Do not auto-generate a message.**
 
-### Step 4: Commit
+### Step 4: Commit and Push in One Sequence
 
-Once the user provides a commit message, commit the staged changes:
+Once the user provides a commit message, run these two commands back to back without stopping:
 
 ```bash
 git commit -m "<user's commit message>"
-```
-
-### Step 5: Push to Main
-
-Push to the main branch:
-
-```bash
 git push origin main
 ```
 
-- If the push fails because the remote has changes the local doesn't have, offer to pull first:
-  ```bash
-  git pull origin main --rebase
-  git push origin main
-  ```
-- If the branch is `master` instead of `main`, use `master`.
+**Do not run `git push` alone. Always run `git commit` first.**
 
-### Step 6: Confirm Success
+If the branch is named `master` instead of `main`, use `master`.
 
-After a successful push, confirm to the user:
+If the push fails because the remote has new changes, run:
 
-> "✅ Your code has been pushed to GitHub successfully!"
+```bash
+git pull origin main --rebase
+git push origin main
+```
 
-Show the commit hash and branch name from the output.
+### Step 5: Confirm Success
+
+Show the user the output and confirm:
+
+> "✅ Done! Your code has been committed and pushed to GitHub."
+
+Include the commit hash from the output.
 
 ## Error Handling
 
-- **Authentication errors**: Tell the user their GitHub credentials may need to be configured, and suggest checking their SSH key or personal access token.
-- **Merge conflicts**: Tell the user there are conflicts that need to be resolved manually before pushing.
-- **Nothing to commit**: Let the user know there are no changes to push.
+- **Authentication error**: Tell the user to check their SSH key or GitHub personal access token.
+- **Merge conflict**: Tell the user there are conflicts to resolve manually before pushing.
+- **Nothing to commit**: Caught in Step 2 — tell the user and stop gracefully.
